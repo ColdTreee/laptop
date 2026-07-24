@@ -147,11 +147,11 @@ h1 span { color: var(--teal-dark); }
 }
 
 @media (max-width: 520px) {
-  .page-heading.page-heading-focus-only { padding-top: 12px; }
+  .page-heading.page-heading-focus-only { margin: -16px -16px 0; padding: 12px 16px 8px; overflow: hidden; }
   .learning-focus-showcase { grid-template-columns: minmax(0, 1fr) minmax(150px, 46%); grid-template-areas: "visual card"; gap: 12px; align-items: center; }
-  .learning-focus-visual { grid-area: visual; justify-items: start; height: 230px; }
-  .learning-focus-image { width: 145%; max-width: none; transform: translateX(-21%); object-position: left center; }
-  .learning-focus-card { grid-area: card; display: flex; box-sizing: border-box; min-width: 0; min-height: 218px; flex-direction: column; justify-content: center; padding: 16px 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .86); border-radius: 28px; background: linear-gradient(145deg, rgba(255, 255, 255, .72), rgba(231, 249, 243, .5)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .96), 0 12px 28px rgba(39, 90, 76, .1); backdrop-filter: blur(20px) saturate(145%); }
+  .learning-focus-visual { position: relative; z-index: 3; grid-area: visual; justify-items: start; height: 230px; }
+  .learning-focus-image { width: 136%; max-width: none; transform: translate(-8%, 10px) scale(1.08); object-position: left center; transform-origin: center; }
+  .learning-focus-card { position: relative; z-index: 2; grid-area: card; display: flex; box-sizing: border-box; min-width: 0; min-height: 218px; flex-direction: column; justify-content: center; padding: 16px 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .7); border-radius: 28px; background: linear-gradient(145deg, rgba(255, 255, 255, .52), rgba(218, 245, 237, .3)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .88), 0 14px 32px rgba(39, 90, 76, .11); -webkit-backdrop-filter: blur(22px) saturate(155%); backdrop-filter: blur(22px) saturate(155%); }
   .learning-focus-copy { align-self: stretch; }
   .page-heading-focus-only .learning-focus-heading h1 { margin-bottom: 0; font-size: 19px; }
   .learning-focus-heading span { font-size: 9px; }
@@ -159,8 +159,9 @@ h1 span { color: var(--teal-dark); }
   .learning-focus-list div { gap: 8px; font-size: 10px; }
   .learning-focus-list dd { font-size: 15px; }
   .learning-focus-note { margin-top: 9px; font-size: 9px; }
-  .page-heading-focus-only .range-switcher { border-radius: 16px; }
+  .page-heading-focus-only .range-switcher { position: relative; z-index: 4; margin-top: -16px; border-color: rgba(255, 255, 255, .72); border-radius: 16px; background: linear-gradient(135deg, rgba(255, 255, 255, .5), rgba(215, 244, 235, .3)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .88), 0 12px 30px rgba(30, 83, 69, .1); -webkit-backdrop-filter: blur(22px) saturate(165%); backdrop-filter: blur(22px) saturate(165%); }
   .page-heading-focus-only .range-switcher button { border-radius: 12px; }
+  .page-heading-focus-only .range-switcher .range-active { background: linear-gradient(135deg, rgba(255, 255, 255, .7), rgba(167, 241, 220, .4)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .94), 0 5px 16px rgba(20, 122, 96, .12); }
 }
 
 /* Learning records */

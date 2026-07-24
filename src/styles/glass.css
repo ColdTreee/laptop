@@ -537,7 +537,7 @@ body { background: var(--canvas); font-family: Inter, "PingFang SC", "Microsoft 
   .app-shell > .sidebar { display: none; }
   .mobile-menu { display: none !important; }
   .main-content { padding: 0 16px calc(104px + env(safe-area-inset-bottom)); }
-  .topbar { top: 0; height: 58px; margin: 0 -4px; padding: 0 4px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .7); border-radius: 0; background: rgba(238, 241, 239, .78); box-shadow: none; backdrop-filter: blur(16px); }
+  .topbar { top: 0; height: 58px; margin: 0 -4px; padding: 0 4px; border: 0; border-radius: 0; background: rgba(238, 241, 239, .78); box-shadow: none; backdrop-filter: blur(16px); }
   .breadcrumbs > span,
   .breadcrumbs > svg { display: none; }
   .breadcrumbs strong { font-size: 17px; font-weight: 760; letter-spacing: 0; }
@@ -555,7 +555,10 @@ body { background: var(--canvas); font-family: Inter, "PingFang SC", "Microsoft 
   .health-grid,
   .goals-grid { gap: 12px; }
   .panel { padding: 17px; border-radius: 8px; }
-  .dashboard-grid .panel { border-radius: 22px; }
+  .dashboard-grid .panel,
+  .records-grid .panel,
+  .health-grid .panel,
+  .goals-grid .panel { border-radius: 22px; }
   .panel-heading h2 { font-size: 16px; letter-spacing: 0; }
   .panel-heading .eyebrow { font-size: 10px; letter-spacing: .08em; }
   .light-environment-panel { min-height: 202px; grid-column: auto; padding: 18px; }
