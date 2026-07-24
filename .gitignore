@@ -13,10 +13,14 @@ out
 dist
 dist-ssr
 database
+!database/
+!database/migrations/
+!database/migrations/*.sql
 *.local
 .env
 .env.*
 !.env.example
+数据格式.md
 
 # Editor directories and files
 .vscode/*

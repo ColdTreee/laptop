@@ -6,7 +6,7 @@ import '../styles/glass.css'
 import '../components/auth/Auth.css'
 
 export const metadata: Metadata = {
-  title: '光迹 · 学习健康中心',
+  title: '青芽鑫护 · 学习健康中心',
   description: '学习效率、用眼与坐姿健康管理平台',
   icons: { icon: '/favicon.svg' },
 }

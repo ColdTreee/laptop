@@ -45,6 +45,9 @@ docker compose up -d mysql
 - `POST /api/pomodoro/sessions`
 - `PATCH /api/pomodoro/sessions/:id`
 - `GET /api/healthz`
+- `GET /api/desk-light?userId=1`
+- `GET /api/monitoring/readings?userId=1`
+- `POST /api/monitoring/readings` (single reading object or `{ userId, records: [...] }` batch payload)
 
 ## 验证与生产运行
 

@@ -3,6 +3,7 @@ import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 import { getDatabase, isDatabaseConfigured } from '../../lib/db'
 import {
   FALLBACK_ACTIVE_PLAN,
+  FALLBACK_ENVIRONMENT_READING,
   FALLBACK_HEALTH_OVERVIEW,
   FALLBACK_POMODORO_STATS,
   FALLBACK_STUDY_SUMMARY,
@@ -10,6 +11,7 @@ import {
 import type {
   ActivePlan,
   DashboardRange,
+  EnvironmentReading,
   HealthEvent,
   HealthOverview,
   PlanUpdateInput,
@@ -71,6 +73,28 @@ interface PomodoroRow extends RowDataPacket {
   focused_seconds: number | string
   focus_minutes: number | null
   short_break_minutes: number | null
+}
+
+interface EnvironmentReadingRow extends RowDataPacket {
+  ambient_light_lux: number
+  desk_lamp_brightness_percent: number
+  color_temperature_kelvin: number | null
+  posture_status: number | null
+  seat_status: number | null
+  writing_distance_cm: number | null
+  study_duration_minutes: number | null
+  captured_at: Date | string
+}
+
+export interface EnvironmentReadingInput {
+  postureStatus?: number
+  seatStatus?: number
+  ambientLightLux?: number
+  deskLampBrightnessPercent?: number
+  colorTemperatureKelvin?: number
+  writingDistanceCm?: number
+  studyDurationMinutes?: number
+  capturedAt?: string
 }
 
 const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
@@ -257,6 +281,68 @@ export async function getPomodoroStats(userId: number): Promise<PomodoroStats> {
       focusedMinutesToday: Math.round(Number(row?.focused_seconds ?? 0) / 60),
     }
   }, FALLBACK_POMODORO_STATS)
+}
+
+export async function getLatestEnvironmentReading(userId: number): Promise<EnvironmentReading> {
+  return withFallback(async () => {
+    const [rows] = await getDatabase().query<EnvironmentReadingRow[]>(`
+      SELECT ambient_light_lux, desk_lamp_brightness_percent, color_temperature_kelvin,
+             posture_status, seat_status, writing_distance_cm, study_duration_minutes, captured_at
+      FROM study_environment_readings
+      WHERE user_id = ?
+      ORDER BY captured_at DESC, id DESC
+      LIMIT 1
+    `, [userId])
+    const row = rows[0]
+    if (!row) return structuredClone(FALLBACK_ENVIRONMENT_READING)
+
+    return {
+      ambientLightLux: row.ambient_light_lux,
+      deskLampBrightnessPercent: row.desk_lamp_brightness_percent,
+      colorTemperatureKelvin: row.color_temperature_kelvin ?? 4200,
+      postureStatus: row.posture_status,
+      seatStatus: row.seat_status,
+      writingDistanceCm: row.writing_distance_cm,
+      studyDurationMinutes: row.study_duration_minutes,
+      capturedAt: row.captured_at instanceof Date ? row.captured_at.toISOString() : row.captured_at,
+    }
+  }, FALLBACK_ENVIRONMENT_READING)
+}
+
+export async function createEnvironmentReadings(userId: number, readings: EnvironmentReadingInput[]) {
+  const db = getDatabase()
+  const connection = await db.getConnection()
+  try {
+    await connection.beginTransaction()
+    const ids: number[] = []
+    for (const reading of readings) {
+      const [result] = await connection.execute<ResultSetHeader>(`
+        INSERT INTO study_environment_readings (
+          user_id, posture_status, seat_status, ambient_light_lux,
+          desk_lamp_brightness_percent, color_temperature_kelvin,
+          writing_distance_cm, study_duration_minutes, captured_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()))
+      `, [
+        userId,
+        reading.postureStatus ?? null,
+        reading.seatStatus ?? null,
+        reading.ambientLightLux ?? null,
+        reading.deskLampBrightnessPercent ?? null,
+        reading.colorTemperatureKelvin ?? null,
+        reading.writingDistanceCm ?? null,
+        reading.studyDurationMinutes ?? null,
+        reading.capturedAt ?? null,
+      ])
+      ids.push(result.insertId)
+    }
+    await connection.commit()
+    return ids
+  } catch (error) {
+    await connection.rollback()
+    throw error
+  } finally {
+    connection.release()
+  }
 }
 
 export async function updateTaskCompletion(userId: number, taskId: number, completed: boolean) {

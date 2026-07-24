@@ -62,6 +62,17 @@ export interface PomodoroStats {
   focusedMinutesToday: number
 }
 
+export interface EnvironmentReading {
+  ambientLightLux: number
+  deskLampBrightnessPercent: number
+  colorTemperatureKelvin: number
+  postureStatus: number | null
+  seatStatus: number | null
+  writingDistanceCm: number | null
+  studyDurationMinutes: number | null
+  capturedAt: string | null
+}
+
 export interface PlanUpdateInput {
   title: string
   dailyMinutes: number

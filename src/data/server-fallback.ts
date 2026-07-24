@@ -1,4 +1,4 @@
-import type { ActivePlan, HealthOverview, PomodoroStats, StudySummary } from '../types/dashboard'
+import type { ActivePlan, EnvironmentReading, HealthOverview, PomodoroStats, StudySummary } from '../types/dashboard'
 
 export const DEMO_USER_ID = 1
 
@@ -54,4 +54,15 @@ export const FALLBACK_POMODORO_STATS: PomodoroStats = {
   breakMinutes: 5,
   completedToday: 2,
   focusedMinutesToday: 50,
+}
+
+export const FALLBACK_ENVIRONMENT_READING: EnvironmentReading = {
+  ambientLightLux: 680,
+  deskLampBrightnessPercent: 70,
+  colorTemperatureKelvin: 4200,
+  postureStatus: 0,
+  seatStatus: 0,
+  writingDistanceCm: 39,
+  studyDurationMinutes: 0,
+  capturedAt: null,
 }
