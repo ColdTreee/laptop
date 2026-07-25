@@ -3,6 +3,7 @@
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Bot, Send, Sparkles, Square, Trash2, UserRound, X } from 'lucide-react'
+import { MarkdownMessage } from '../ui/MarkdownMessage'
 
 type ChatMessage = {
   id: string
@@ -47,14 +48,35 @@ export function AiChatPopover() {
     }
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
+      if (event.key !== 'Tab' || !chatPanelRef.current) return
+
+      const focusable = Array.from(chatPanelRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+      )).filter((element) => !element.hasAttribute('hidden'))
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     document.addEventListener('pointerdown', handlePointerDown)
     document.addEventListener('keydown', handleKeyDown)
+    document.body.classList.add('ai-chat-open')
     window.setTimeout(() => textareaRef.current?.focus({ preventScroll: true }), 0)
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
+      document.body.classList.remove('ai-chat-open')
     }
   }, [open])
 
@@ -189,63 +211,72 @@ export function AiChatPopover() {
       </button>
 
       {open && typeof document !== 'undefined' && createPortal(
-        <section ref={chatPanelRef} className="ai-chat-popover" role="dialog" aria-modal="false" aria-labelledby="ai-chat-title">
-          <header className="ai-chat-header">
-            <div className="ai-chat-identity">
-              <span className="ai-chat-avatar"><Bot size={18} /></span>
-              <div>
-                <h2 id="ai-chat-title">AI 学习助手</h2>
-                <span><i aria-hidden="true" />DeepSeek</span>
-              </div>
-            </div>
-            <div className="ai-chat-header-actions">
-              <button type="button" onClick={resetConversation} aria-label="新对话" title="新对话"><Trash2 size={16} /></button>
-              <button type="button" onClick={() => setOpen(false)} aria-label="关闭 AI 助手" title="关闭"><X size={17} /></button>
-            </div>
-          </header>
-
-          <div ref={messagesViewportRef} className="ai-chat-messages" aria-live="polite" aria-busy={isStreaming}>
-            {messages.map((message) => (
-              <div className={`ai-message ai-message-${message.role}`} key={message.id}>
-                <span className="ai-message-avatar" aria-hidden="true">
-                  {message.role === 'assistant' ? <Bot size={14} /> : <UserRound size={14} />}
-                </span>
-                <div className={`ai-message-bubble ${!message.content ? 'ai-message-loading' : ''}`}>
-                  {message.content || <><i /><i /><i /><span className="sr-only">正在生成回答</span></>}
+        <>
+          <button
+            type="button"
+            className="ai-chat-backdrop"
+            onClick={() => setOpen(false)}
+            aria-label="关闭 AI 助手"
+            tabIndex={-1}
+          />
+          <section ref={chatPanelRef} className="ai-chat-popover" role="dialog" aria-modal="true" aria-labelledby="ai-chat-title">
+            <header className="ai-chat-header">
+              <div className="ai-chat-identity">
+                <span className="ai-chat-avatar"><Bot size={18} /></span>
+                <div>
+                  <h2 id="ai-chat-title">AI 学习助手</h2>
+                  <span><i aria-hidden="true" />DeepSeek</span>
                 </div>
               </div>
-            ))}
-
-            {messages.length === 1 && (
-              <div className="ai-suggestions" aria-label="建议问题">
-                {SUGGESTED_PROMPTS.map((prompt) => (
-                  <button type="button" key={prompt} onClick={() => void sendMessage(prompt)}>{prompt}</button>
-                ))}
+              <div className="ai-chat-header-actions">
+                <button type="button" onClick={resetConversation} aria-label="新对话" title="新对话"><Trash2 size={16} /></button>
+                <button type="button" onClick={() => setOpen(false)} aria-label="关闭 AI 助手" title="关闭"><X size={17} /></button>
               </div>
-            )}
+            </header>
 
-            {error && <div className="ai-chat-error" role="alert">{error}</div>}
-          </div>
+            <div ref={messagesViewportRef} className="ai-chat-messages" aria-live="polite" aria-busy={isStreaming}>
+              {messages.map((message) => (
+                <div className={`ai-message ai-message-${message.role}`} key={message.id}>
+                  <span className="ai-message-avatar" aria-hidden="true">
+                    {message.role === 'assistant' ? <Bot size={14} /> : <UserRound size={14} />}
+                  </span>
+                  <div className={`ai-message-bubble ${!message.content ? 'ai-message-loading' : ''}`}>
+                    {message.content ? <MarkdownMessage content={message.content} /> : <><i /><i /><i /><span className="sr-only">正在生成回答</span></>}
+                  </div>
+                </div>
+              ))}
 
-          <form className="ai-chat-composer" onSubmit={submit}>
-            <textarea
-              ref={textareaRef}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={handleComposerKeyDown}
-              rows={1}
-              maxLength={12_000}
-              placeholder="输入你的问题..."
-              aria-label="发送给 AI 助手的消息"
-              disabled={isStreaming}
-            />
-            {isStreaming ? (
-              <button type="button" className="ai-send-button ai-stop-button" onClick={stopStreaming} aria-label="停止生成" title="停止生成"><Square size={13} fill="currentColor" /></button>
-            ) : (
-              <button type="submit" className="ai-send-button" disabled={!draft.trim()} aria-label="发送消息" title="发送"><Send size={16} /></button>
-            )}
-          </form>
-        </section>,
+              {messages.length === 1 && (
+                <div className="ai-suggestions" aria-label="建议问题">
+                  {SUGGESTED_PROMPTS.map((prompt) => (
+                    <button type="button" key={prompt} onClick={() => void sendMessage(prompt)}>{prompt}</button>
+                  ))}
+                </div>
+              )}
+
+              {error && <div className="ai-chat-error" role="alert">{error}</div>}
+            </div>
+
+            <form className="ai-chat-composer" onSubmit={submit}>
+              <textarea
+                ref={textareaRef}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={handleComposerKeyDown}
+                rows={1}
+                maxLength={12_000}
+                placeholder="输入你的问题..."
+                aria-label="发送给 AI 助手的消息"
+                disabled={isStreaming}
+              />
+              {isStreaming ? (
+                <button type="button" className="ai-send-button ai-stop-button" onClick={stopStreaming} aria-label="停止生成" title="停止生成"><Square size={13} fill="currentColor" /></button>
+              ) : (
+                <button type="submit" className="ai-send-button" disabled={!draft.trim()} aria-label="发送消息" title="发送"><Send size={16} /></button>
+              )}
+            </form>
+          </section>
+        </>,
         document.body,
       )}
     </div>

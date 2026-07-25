@@ -24,6 +24,24 @@
   box-shadow: 0 0 0 2px rgba(36, 173, 131, .12), 0 0 9px rgba(36, 173, 131, .46);
 }
 
+body.ai-chat-open { overflow: hidden; }
+.ai-chat-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: rgba(228, 237, 234, .24);
+  -webkit-backdrop-filter: blur(8px) saturate(82%);
+  backdrop-filter: blur(8px) saturate(82%);
+  cursor: default;
+  animation: ai-backdrop-in .18s ease-out;
+}
+.ai-chat-backdrop:focus { outline: 0; }
+
 .ai-chat-popover {
   position: fixed;
   top: 74px;
@@ -120,7 +138,6 @@
   font-size: 12px;
   line-height: 1.65;
   letter-spacing: 0;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .ai-message-user .ai-message-bubble {
@@ -130,6 +147,71 @@
   background: #287d76;
   box-shadow: 0 7px 17px rgba(40, 125, 118, .16);
 }
+
+.ai-markdown { min-width: 0; }
+.ai-markdown > :first-child { margin-top: 0; }
+.ai-markdown > :last-child { margin-bottom: 0; }
+.ai-markdown p { margin: 0 0 8px; }
+.ai-markdown h1,
+.ai-markdown h2,
+.ai-markdown h3,
+.ai-markdown h4 {
+  margin: 12px 0 6px;
+  color: inherit;
+  font-size: 1em;
+  line-height: 1.45;
+  letter-spacing: 0;
+  font-weight: 760;
+}
+.ai-markdown ul,
+.ai-markdown ol { margin: 6px 0 9px; padding-left: 19px; }
+.ai-markdown li + li { margin-top: 4px; }
+.ai-markdown li::marker { color: #34867a; font-weight: 700; }
+.ai-markdown blockquote {
+  margin: 8px 0;
+  padding: 2px 0 2px 9px;
+  border-left: 3px solid rgba(52, 134, 122, .42);
+  color: #687c77;
+}
+.ai-markdown a { color: #166f61; text-decoration: underline; text-underline-offset: 2px; }
+.ai-markdown code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: #23685e;
+  background: rgba(42, 120, 108, .09);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: .92em;
+}
+.ai-markdown pre {
+  max-width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 7px;
+  color: #eaf8f4;
+  background: #263b38;
+  white-space: pre;
+}
+.ai-markdown pre code { padding: 0; color: inherit; background: transparent; }
+.ai-markdown hr { margin: 10px 0; border: 0; border-top: 1px solid rgba(72, 119, 108, .18); }
+.ai-markdown input[type="checkbox"] { margin: 0 5px 0 0; accent-color: #287d76; }
+.ai-markdown-table {
+  max-width: 100%;
+  margin: 8px 0;
+  overflow-x: auto;
+  border: 1px solid rgba(75, 127, 116, .18);
+  border-radius: 6px;
+}
+.ai-markdown table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.ai-markdown th,
+.ai-markdown td { padding: 6px 7px; border-bottom: 1px solid rgba(75, 127, 116, .14); text-align: left; white-space: nowrap; }
+.ai-markdown th { color: #345c55; background: rgba(222, 239, 234, .68); font-weight: 700; }
+.ai-markdown tr:last-child td { border-bottom: 0; }
+.ai-message-user .ai-markdown a { color: #fff; }
+.ai-message-user .ai-markdown li::marker { color: rgba(255, 255, 255, .82); }
+.ai-message-user .ai-markdown code { color: #fff; background: rgba(255, 255, 255, .15); }
+.ai-message-user .ai-markdown blockquote { color: rgba(255, 255, 255, .82); border-left-color: rgba(255, 255, 255, .5); }
 .ai-message-loading { min-width: 48px; min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 4px; }
 .ai-message-loading > i { width: 5px; height: 5px; border-radius: 50%; background: #64a69a; animation: ai-typing 1s ease-in-out infinite; }
 .ai-message-loading > i:nth-child(2) { animation-delay: .14s; }
@@ -242,6 +324,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ai-chat-backdrop,
   .ai-chat-popover,
   .ai-message-loading > i { animation-duration: .01ms; animation-iteration-count: 1; }
   .ai-chat-messages { scroll-behavior: auto; }
@@ -250,6 +333,11 @@
 @keyframes ai-popover-in {
   from { opacity: 0; transform: translateY(-5px) scale(.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ai-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes ai-typing {
