@@ -36,7 +36,7 @@ export function RegisterForm({ onSubmit, onSwitchMode }: RegisterFormProps) {
 
   return (
     <form className="auth-form auth-register-form" onSubmit={handleSubmit} noValidate>
-      <div className="auth-form-heading"><p>开始使用</p><h2>创建光迹账号</h2><span>建立属于你的学习健康档案。</span></div>
+      <div className="auth-form-heading"><p>开始使用</p><h2>创建青芽鑫护账号</h2><span>建立属于你的学习健康档案。</span></div>
       <AuthField id="register-name" label="昵称" icon={<UserRound size={18} />} value={name} onChange={(event) => setName(event.target.value)} placeholder="请输入昵称" autoComplete="name" error={errors.name} />
       <AuthField id="register-account" label="邮箱" icon={<Mail size={18} />} type="email" value={account} onChange={(event) => setAccount(event.target.value)} placeholder="name@example.com" autoComplete="email" error={errors.account} />
       <AuthField

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">光迹学习健康中心</string>
+    <!-- Android Emulator reaches the host computer through 10.0.2.2. -->
+    <string name="web_app_url" translatable="false">https://www.coldtree.cloud/</string>
+    <string name="load_error">页面暂时无法加载，请确认服务地址和网络连接。</string>
+    <string name="retry">重新加载</string>
+</resources>

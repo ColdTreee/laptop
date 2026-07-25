@@ -21,7 +21,7 @@ export function Sidebar(props: SidebarProps) {
     <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <div className="brand-lockup">
         <div className="brand-mark"><Sparkles size={17} strokeWidth={2.2} /></div>
-        <div><p className="brand-name">光迹</p><p className="brand-caption">学习健康中心</p></div>
+        <div><p className="brand-name">青芽鑫护</p><p className="brand-caption">学习健康中心</p></div>
         <button className="icon-button sidebar-close" onClick={onClose} aria-label="关闭导航"><X size={18} /></button>
       </div>
 

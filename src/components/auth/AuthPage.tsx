@@ -21,8 +21,8 @@ export function AuthPage({ mode, onLogin, onModeChange, onRegister }: AuthPagePr
   return (
     <main className="auth-page">
       <AmbientBackdrop variant="auth" />
-      <section className="auth-showcase" aria-label="光迹产品介绍">
-        <div className="auth-brand"><span><Sparkles size={20} /></span><div><strong>光迹</strong><small>学习健康中心</small></div></div>
+      <section className="auth-showcase" aria-label="青芽鑫护产品介绍">
+        <div className="auth-brand"><span><Sparkles size={20} /></span><div><strong>青芽鑫护</strong><small>学习健康中心</small></div></div>
         <div className="auth-showcase-copy">
           <p className="auth-kicker">LEARN BETTER · FEEL BETTER</p>
           <h1>让每一次专注，<br /><span>都更轻松、更长久。</span></h1>
@@ -38,7 +38,7 @@ export function AuthPage({ mode, onLogin, onModeChange, onRegister }: AuthPagePr
 
       <section className="auth-form-section">
         <div className="auth-form-card">
-          <div className="auth-mobile-brand"><Sparkles size={18} /><strong>光迹</strong></div>
+          <div className="auth-mobile-brand"><Sparkles size={18} /><strong>青芽鑫护</strong></div>
           {mode === 'login'
             ? <LoginForm onSubmit={onLogin} onSwitchMode={() => onModeChange('register')} />
             : <RegisterForm onSubmit={onRegister} onSwitchMode={() => onModeChange('login')} />}

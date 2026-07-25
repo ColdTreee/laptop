@@ -31,7 +31,7 @@ export function LoginForm({ onSubmit, onSwitchMode }: LoginFormProps) {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit} noValidate>
-      <div className="auth-form-heading"><p>欢迎回来</p><h2>登录光迹账号</h2><span>继续查看你的学习与健康趋势。</span></div>
+      <div className="auth-form-heading"><p>欢迎回来</p><h2>登录青芽鑫护账号</h2><span>继续查看你的学习与健康趋势。</span></div>
       <AuthField id="login-account" label="手机号或邮箱" icon={<UserRound size={18} />} value={account} onChange={(event) => setAccount(event.target.value)} placeholder="请输入手机号或邮箱" autoComplete="username" error={errors.account} />
       <AuthField
         id="login-password"
