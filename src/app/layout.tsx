@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import '../index.css'
 import '../App.css'
 import '../styles/glass.css'
+import '../styles/ai-chat.css'
 import '../components/auth/Auth.css'
 
 export const metadata: Metadata = {
