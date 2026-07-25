@@ -98,15 +98,47 @@ export interface EnvironmentReadingInput {
 }
 
 const WEEK_LABELS = ['一', '二', '三', '四', '五', '六', '日']
+const DATABASE_FALLBACK_COOLDOWN_MS = 30_000
+const DATABASE_UNAVAILABLE_CODES = new Set([
+  'EACCES',
+  'EAI_AGAIN',
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ENETUNREACH',
+  'ENOTFOUND',
+  'ETIMEDOUT',
+  'EHOSTUNREACH',
+  'PROTOCOL_CONNECTION_LOST',
+])
+
+let databaseFallbackUntil = 0
+
+function getDatabaseErrorCode(error: unknown) {
+  if (!error || typeof error !== 'object' || !('code' in error)) return undefined
+  const code = error.code
+  return typeof code === 'string' ? code : undefined
+}
 
 async function withFallback<T>(query: () => Promise<T>, fallback: T): Promise<T> {
   if (!isDatabaseConfigured()) return structuredClone(fallback)
+  if (process.env.NODE_ENV !== 'production' && databaseFallbackUntil > Date.now()) {
+    return structuredClone(fallback)
+  }
 
   try {
-    return await query()
+    const result = await query()
+    databaseFallbackUntil = 0
+    return result
   } catch (error) {
-    console.error('数据库查询失败：', error)
     if (process.env.NODE_ENV === 'production') throw error
+
+    const code = getDatabaseErrorCode(error)
+    if (code && DATABASE_UNAVAILABLE_CODES.has(code)) {
+      databaseFallbackUntil = Date.now() + DATABASE_FALLBACK_COOLDOWN_MS
+      return structuredClone(fallback)
+    }
+
+    console.error('数据库查询失败：', error)
     return structuredClone(fallback)
   }
 }
