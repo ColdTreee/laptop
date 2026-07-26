@@ -66,10 +66,14 @@ export function MobilePillNavigation() {
     const fallbackAmbient = Math.max(0, Math.round(brightness * 9.4))
     const storedAmbient = base?.ambientLightLux
     const payload = {
+      ...(base?.postureStatus != null ? { postureStatus: base.postureStatus } : {}),
+      ...(base?.seatStatus != null ? { seatStatus: base.seatStatus } : {}),
       ambientLightLux: typeof storedAmbient === 'number' && Number.isInteger(storedAmbient) ? storedAmbient : fallbackAmbient,
       deskLampBrightnessPercent: updates.deskLampBrightnessPercent ?? base?.deskLampBrightnessPercent ?? brightness,
       colorTemperatureKelvin: updates.colorTemperatureKelvin ?? base?.colorTemperatureKelvin ?? Number.parseInt(currentMode.temperature, 10),
       deskLampMode: updates.deskLampMode ?? base?.deskLampMode ?? deskLampMode,
+      ...(base?.writingDistanceCm != null ? { writingDistanceCm: base.writingDistanceCm } : {}),
+      ...(base?.studyDurationMinutes != null ? { studyDurationMinutes: base.studyDurationMinutes } : {}),
     }
     const response = await fetch('/api/monitoring/readings', {
       method: 'POST',

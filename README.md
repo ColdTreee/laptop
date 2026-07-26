@@ -48,6 +48,7 @@ docker compose up -d mysql
 - `GET /api/desk-light?userId=1`
 - `GET /api/monitoring/readings?userId=1`
 - `POST /api/monitoring/readings` (single reading object or `{ userId, records: [...] }` batch payload)
+- `POST /api/monitoring/readings?user_id=1&posture_status=1&seat_status=0&ambient_light_lux=800` (device compatibility; accepts all monitoring fields in `snake_case`)
 
 ## 验证与生产运行
 
