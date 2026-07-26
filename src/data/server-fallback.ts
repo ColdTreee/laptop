@@ -60,6 +60,7 @@ export const FALLBACK_ENVIRONMENT_READING: EnvironmentReading = {
   ambientLightLux: 680,
   deskLampBrightnessPercent: 70,
   colorTemperatureKelvin: 4200,
+  deskLampMode: 'auto',
   postureStatus: 0,
   seatStatus: 0,
   writingDistanceCm: 39,

@@ -13,6 +13,7 @@ const readingSchema = z.object({
   ambientLightLux: z.int().min(0).optional(),
   deskLampBrightnessPercent: z.int().min(0).max(100).optional(),
   colorTemperatureKelvin: z.int().min(1000).max(10000).optional(),
+  deskLampMode: z.enum(['auto', 'manual']).optional(),
   writingDistanceCm: z.int().min(0).optional(),
   studyDurationMinutes: z.int().min(0).optional(),
   capturedAt: z.iso.datetime().optional(),

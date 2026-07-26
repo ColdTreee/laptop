@@ -79,6 +79,7 @@ interface EnvironmentReadingRow extends RowDataPacket {
   ambient_light_lux: number
   desk_lamp_brightness_percent: number
   color_temperature_kelvin: number | null
+  desk_lamp_mode: 'auto' | 'manual' | null
   posture_status: number | null
   seat_status: number | null
   writing_distance_cm: number | null
@@ -92,6 +93,7 @@ export interface EnvironmentReadingInput {
   ambientLightLux?: number
   deskLampBrightnessPercent?: number
   colorTemperatureKelvin?: number
+  deskLampMode?: 'auto' | 'manual'
   writingDistanceCm?: number
   studyDurationMinutes?: number
   capturedAt?: string
@@ -121,7 +123,7 @@ function getDatabaseErrorCode(error: unknown) {
 
 async function withFallback<T>(query: () => Promise<T>, fallback: T): Promise<T> {
   if (!isDatabaseConfigured()) return structuredClone(fallback)
-  if (process.env.NODE_ENV !== 'production' && databaseFallbackUntil > Date.now()) {
+  if (databaseFallbackUntil > Date.now()) {
     return structuredClone(fallback)
   }
 
@@ -130,13 +132,17 @@ async function withFallback<T>(query: () => Promise<T>, fallback: T): Promise<T>
     databaseFallbackUntil = 0
     return result
   } catch (error) {
-    if (process.env.NODE_ENV === 'production') throw error
-
     const code = getDatabaseErrorCode(error)
     if (code && DATABASE_UNAVAILABLE_CODES.has(code)) {
+      const shouldLog = databaseFallbackUntil <= Date.now()
       databaseFallbackUntil = Date.now() + DATABASE_FALLBACK_COOLDOWN_MS
+      if (shouldLog) {
+        console.warn('Database unavailable; serving dashboard fallback data.', code)
+      }
       return structuredClone(fallback)
     }
+
+    if (process.env.NODE_ENV === 'production') throw error
 
     console.error('数据库查询失败：', error)
     return structuredClone(fallback)
@@ -318,7 +324,7 @@ export async function getPomodoroStats(userId: number): Promise<PomodoroStats> {
 export async function getLatestEnvironmentReading(userId: number): Promise<EnvironmentReading> {
   return withFallback(async () => {
     const [rows] = await getDatabase().query<EnvironmentReadingRow[]>(`
-      SELECT ambient_light_lux, desk_lamp_brightness_percent, color_temperature_kelvin,
+      SELECT ambient_light_lux, desk_lamp_brightness_percent, color_temperature_kelvin, desk_lamp_mode,
              posture_status, seat_status, writing_distance_cm, study_duration_minutes, captured_at
       FROM study_environment_readings
       WHERE user_id = ?
@@ -332,6 +338,7 @@ export async function getLatestEnvironmentReading(userId: number): Promise<Envir
       ambientLightLux: row.ambient_light_lux,
       deskLampBrightnessPercent: row.desk_lamp_brightness_percent,
       colorTemperatureKelvin: row.color_temperature_kelvin ?? 4200,
+      deskLampMode: row.desk_lamp_mode ?? 'auto',
       postureStatus: row.posture_status,
       seatStatus: row.seat_status,
       writingDistanceCm: row.writing_distance_cm,
@@ -351,9 +358,9 @@ export async function createEnvironmentReadings(userId: number, readings: Enviro
       const [result] = await connection.execute<ResultSetHeader>(`
         INSERT INTO study_environment_readings (
           user_id, posture_status, seat_status, ambient_light_lux,
-          desk_lamp_brightness_percent, color_temperature_kelvin,
+          desk_lamp_brightness_percent, color_temperature_kelvin, desk_lamp_mode,
           writing_distance_cm, study_duration_minutes, captured_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, NOW()))
       `, [
         userId,
         reading.postureStatus ?? null,
@@ -361,6 +368,7 @@ export async function createEnvironmentReadings(userId: number, readings: Enviro
         reading.ambientLightLux ?? null,
         reading.deskLampBrightnessPercent ?? null,
         reading.colorTemperatureKelvin ?? null,
+        reading.deskLampMode ?? 'auto',
         reading.writingDistanceCm ?? null,
         reading.studyDurationMinutes ?? null,
         reading.capturedAt ?? null,

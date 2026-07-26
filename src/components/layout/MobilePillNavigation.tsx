@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { type CSSProperties, useState } from 'react'
+import { type CSSProperties, useEffect, useState } from 'react'
 import { Eye, Lightbulb, Moon, SlidersHorizontal, SunMedium, X } from 'lucide-react'
 import { NAV_ITEMS } from '../../data/dashboard'
+import type { EnvironmentReading } from '../../types/dashboard'
 
 const LIGHT_MODES = [
   { id: 'focus', label: '专注', icon: SunMedium, temperature: '4600 K' },
@@ -17,9 +18,66 @@ export function MobilePillNavigation() {
   const [isControlOpen, setIsControlOpen] = useState(false)
   const [lightMode, setLightMode] = useState<(typeof LIGHT_MODES)[number]['id']>('care')
   const [brightness, setBrightness] = useState(72)
+  const [deskLampMode, setDeskLampMode] = useState<'auto' | 'manual'>('auto')
+  const [latestReading, setLatestReading] = useState<EnvironmentReading | null>(null)
+  const [isSavingMode, setIsSavingMode] = useState(false)
+  const [modeSaveError, setModeSaveError] = useState(false)
   const currentMode = LIGHT_MODES.find((mode) => mode.id === lightMode) ?? LIGHT_MODES[1]
   const activeIndex = Math.max(0, NAV_ITEMS.findIndex(({ href }) => pathname === href))
   const capsuleStyle = { '--nav-active-index': activeIndex } as CSSProperties
+
+  useEffect(() => {
+    if (!isControlOpen) return
+
+    let cancelled = false
+    const loadLatestReading = async () => {
+      try {
+        const response = await fetch('/api/monitoring/readings', { cache: 'no-store' })
+        if (!response.ok) throw new Error('Unable to load desk light settings')
+        const reading = await response.json() as EnvironmentReading
+        if (cancelled) return
+
+        setLatestReading(reading)
+        setDeskLampMode(reading.deskLampMode)
+        setBrightness(reading.deskLampBrightnessPercent)
+        const matchingPreset = LIGHT_MODES.find((mode) => Number.parseInt(mode.temperature, 10) === reading.colorTemperatureKelvin)
+        if (matchingPreset) setLightMode(matchingPreset.id)
+        setModeSaveError(false)
+      } catch {
+        if (!cancelled) setModeSaveError(true)
+      }
+    }
+
+    void loadLatestReading()
+    return () => { cancelled = true }
+  }, [isControlOpen])
+
+  const updateDeskLampMode = async (nextMode: 'auto' | 'manual') => {
+    if (nextMode === deskLampMode || isSavingMode) return
+
+    setIsSavingMode(true)
+    setModeSaveError(false)
+    try {
+      const response = await fetch('/api/monitoring/readings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ambientLightLux: latestReading?.ambientLightLux ?? 0,
+          deskLampBrightnessPercent: latestReading?.deskLampBrightnessPercent ?? brightness,
+          colorTemperatureKelvin: latestReading?.colorTemperatureKelvin ?? Number.parseInt(currentMode.temperature, 10),
+          deskLampMode: nextMode,
+        }),
+      })
+      if (!response.ok) throw new Error('Unable to save desk light mode')
+
+      setDeskLampMode(nextMode)
+      setLatestReading((reading) => reading ? { ...reading, deskLampMode: nextMode } : reading)
+    } catch {
+      setModeSaveError(true)
+    } finally {
+      setIsSavingMode(false)
+    }
+  }
 
   return (
     <>
@@ -67,6 +125,28 @@ export function MobilePillNavigation() {
                 <X size={19} />
               </button>
             </div>
+
+            <div className="desk-lamp-mode-control" role="group" aria-label="桌面灯模式">
+              <button
+                className={deskLampMode === 'auto' ? 'desk-lamp-mode-selected' : ''}
+                type="button"
+                onClick={() => void updateDeskLampMode('auto')}
+                disabled={isSavingMode}
+                aria-pressed={deskLampMode === 'auto'}
+              >
+                自动模式
+              </button>
+              <button
+                className={deskLampMode === 'manual' ? 'desk-lamp-mode-selected' : ''}
+                type="button"
+                onClick={() => void updateDeskLampMode('manual')}
+                disabled={isSavingMode}
+                aria-pressed={deskLampMode === 'manual'}
+              >
+                手动模式
+              </button>
+            </div>
+            {modeSaveError && <p className="desk-lamp-mode-error" role="status">模式同步失败</p>}
 
             <div className="light-mode-picker" role="tablist" aria-label="灯光模式">
               {LIGHT_MODES.map(({ id, label, icon: Icon }) => (

@@ -516,6 +516,11 @@ body { background: var(--canvas); font-family: Inter, "PingFang SC", "Microsoft 
 .light-environment-panel .panel-heading h2,
 .light-environment-panel .eyebrow { color: inherit; }
 .light-environment-panel .eyebrow { opacity: .62; }
+.light-title-row { display: flex; align-items: center; gap: 8px; }
+.light-title-row h2 { margin: 0; }
+.desk-lamp-mode { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; min-height: 22px; padding: 3px 8px; border: 1px solid; border-radius: 999px; font-size: 10px; font-weight: 700; line-height: 1; white-space: nowrap; }
+.desk-lamp-mode.is-auto { border-color: rgba(121, 211, 190, .36); color: #a8eadb; background: rgba(81, 173, 153, .16); }
+.desk-lamp-mode.is-manual { border-color: rgba(239, 196, 117, .42); color: #f4d99a; background: rgba(230, 177, 77, .14); }
 .light-mode-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px; color: #f4d99a; background: rgba(255, 255, 255, .08); font-size: 11px; font-weight: 700; }
 .light-environment-body { display: flex; align-items: center; gap: 20px; padding: 23px 0 17px; }
 .light-primary-reading { display: flex; align-items: baseline; gap: 7px; }
@@ -667,6 +672,11 @@ body { background: var(--canvas); font-family: Inter, "PingFang SC", "Microsoft 
   .light-control-header { display: flex; align-items: flex-start; justify-content: space-between; }
   .light-control-header .eyebrow { margin-bottom: 5px; color: #7c8886; }
   .light-control-header h2 { margin: 0; color: var(--ink); font-size: 20px; letter-spacing: 0; }
+  .desk-lamp-mode-control { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 18px; padding: 4px; border: 1px solid rgba(207, 221, 216, .9); border-radius: 999px; background: rgba(231, 240, 236, .72); }
+  .desk-lamp-mode-control button { min-height: 34px; border: 0; border-radius: 999px; color: #70807c; background: transparent; font-size: 12px; font-weight: 700; transition: color .16s ease, background .16s ease, box-shadow .16s ease; }
+  .desk-lamp-mode-control button.desk-lamp-mode-selected { color: #1e4a42; background: rgba(255, 255, 255, .92); box-shadow: 0 2px 8px rgba(44, 82, 73, .14); }
+  .desk-lamp-mode-control button:disabled { cursor: wait; opacity: .62; }
+  .desk-lamp-mode-error { margin: 7px 2px -8px; color: #bd5363; font-size: 11px; }
   .light-mode-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0; }
   .light-mode-picker button { min-height: 76px; display: grid; place-items: center; align-content: center; gap: 7px; border: 1px solid rgba(213, 224, 220, .92); border-radius: 8px; color: #62706d; background: rgba(255, 255, 255, .48); font-size: 12px; }
   .light-mode-picker .light-mode-active { border-color: rgba(196, 166, 100, .68); color: #3d4238; background: rgba(255, 248, 225, .78); box-shadow: inset 0 1px 0 #fff, 0 8px 16px rgba(180, 145, 72, .12); }

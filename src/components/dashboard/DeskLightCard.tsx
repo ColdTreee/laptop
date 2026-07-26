@@ -1,14 +1,22 @@
-import { Lightbulb, Sparkles } from 'lucide-react'
+import { Lightbulb, Settings2, Sparkles } from 'lucide-react'
 import { FALLBACK_ENVIRONMENT_READING } from '../../data/server-fallback'
 import type { EnvironmentReading } from '../../types/dashboard'
 
 export function DeskLightCard({ reading = FALLBACK_ENVIRONMENT_READING }: { reading?: EnvironmentReading }) {
+  const isManualMode = reading.deskLampMode === 'manual'
+
   return (
     <article className="panel light-environment-panel">
       <div className="panel-heading">
         <div>
           <p className="eyebrow">DESK LIGHT LIVE</p>
-          <h2>桌面光环境</h2>
+          <div className="light-title-row">
+            <h2>桌面光环境</h2>
+            <span className={`desk-lamp-mode ${isManualMode ? 'is-manual' : 'is-auto'}`}>
+              <Settings2 aria-hidden="true" size={12} />
+              {isManualMode ? '手动模式' : '自动模式'}
+            </span>
+          </div>
         </div>
         <span className="light-mode-badge"><Lightbulb size={15} />护眼</span>
       </div>

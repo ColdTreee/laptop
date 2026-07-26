@@ -66,6 +66,7 @@ export interface EnvironmentReading {
   ambientLightLux: number
   deskLampBrightnessPercent: number
   colorTemperatureKelvin: number
+  deskLampMode: 'auto' | 'manual'
   postureStatus: number | null
   seatStatus: number | null
   writingDistanceCm: number | null

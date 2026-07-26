@@ -12,5 +12,6 @@ export async function GET(request: Request) {
   return NextResponse.json({
     deskLampBrightnessPercent: reading.deskLampBrightnessPercent,
     colorTemperatureKelvin: reading.colorTemperatureKelvin,
+    deskLampMode: reading.deskLampMode,
   })
 }
