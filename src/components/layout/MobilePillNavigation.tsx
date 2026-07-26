@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { type CSSProperties, useEffect, useState } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import { Eye, Lightbulb, Moon, SlidersHorizontal, SunMedium, X } from 'lucide-react'
+import { FALLBACK_ENVIRONMENT_READING } from '../../data/server-fallback'
 import { NAV_ITEMS } from '../../data/dashboard'
 import type { EnvironmentReading } from '../../types/dashboard'
 
@@ -22,7 +23,10 @@ export function MobilePillNavigation() {
   const [latestReading, setLatestReading] = useState<EnvironmentReading | null>(null)
   const [isSavingMode, setIsSavingMode] = useState(false)
   const [modeSaveError, setModeSaveError] = useState(false)
+  const brightnessSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const currentMode = LIGHT_MODES.find((mode) => mode.id === lightMode) ?? LIGHT_MODES[1]
+  const displayedAmbientLight = latestReading?.ambientLightLux ?? Math.round(brightness * 9.4)
+  const displayedColorTemperature = latestReading?.colorTemperatureKelvin ?? Number.parseInt(currentMode.temperature, 10)
   const activeIndex = Math.max(0, NAV_ITEMS.findIndex(({ href }) => pathname === href))
   const capsuleStyle = { '--nav-active-index': activeIndex } as CSSProperties
 
@@ -42,6 +46,7 @@ export function MobilePillNavigation() {
         setBrightness(reading.deskLampBrightnessPercent)
         const matchingPreset = LIGHT_MODES.find((mode) => Number.parseInt(mode.temperature, 10) === reading.colorTemperatureKelvin)
         if (matchingPreset) setLightMode(matchingPreset.id)
+        window.dispatchEvent(new CustomEvent('desk-light-reading-updated', { detail: reading }))
         setModeSaveError(false)
       } catch {
         if (!cancelled) setModeSaveError(true)
@@ -52,31 +57,64 @@ export function MobilePillNavigation() {
     return () => { cancelled = true }
   }, [isControlOpen])
 
+  useEffect(() => () => {
+    if (brightnessSaveTimer.current) clearTimeout(brightnessSaveTimer.current)
+  }, [])
+
+  const persistLightSettings = async (updates: Partial<Pick<EnvironmentReading, 'deskLampMode' | 'deskLampBrightnessPercent' | 'colorTemperatureKelvin'>>) => {
+    const base = latestReading
+    const fallbackAmbient = Math.max(0, Math.round(brightness * 9.4))
+    const storedAmbient = base?.ambientLightLux
+    const payload = {
+      ambientLightLux: typeof storedAmbient === 'number' && Number.isInteger(storedAmbient) ? storedAmbient : fallbackAmbient,
+      deskLampBrightnessPercent: updates.deskLampBrightnessPercent ?? base?.deskLampBrightnessPercent ?? brightness,
+      colorTemperatureKelvin: updates.colorTemperatureKelvin ?? base?.colorTemperatureKelvin ?? Number.parseInt(currentMode.temperature, 10),
+      deskLampMode: updates.deskLampMode ?? base?.deskLampMode ?? deskLampMode,
+    }
+    const response = await fetch('/api/monitoring/readings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!response.ok) throw new Error('Unable to save desk light settings')
+
+    const nextReading = { ...(base ?? FALLBACK_ENVIRONMENT_READING), ...payload }
+    setLatestReading(nextReading)
+    setModeSaveError(false)
+    window.dispatchEvent(new CustomEvent('desk-light-reading-updated', { detail: nextReading }))
+    return nextReading
+  }
+
   const updateDeskLampMode = async (nextMode: 'auto' | 'manual') => {
     if (nextMode === deskLampMode || isSavingMode) return
 
     setIsSavingMode(true)
     setModeSaveError(false)
     try {
-      const response = await fetch('/api/monitoring/readings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ambientLightLux: latestReading?.ambientLightLux ?? 0,
-          deskLampBrightnessPercent: latestReading?.deskLampBrightnessPercent ?? brightness,
-          colorTemperatureKelvin: latestReading?.colorTemperatureKelvin ?? Number.parseInt(currentMode.temperature, 10),
-          deskLampMode: nextMode,
-        }),
-      })
-      if (!response.ok) throw new Error('Unable to save desk light mode')
-
-      setDeskLampMode(nextMode)
-      setLatestReading((reading) => reading ? { ...reading, deskLampMode: nextMode } : reading)
+      const savedReading = await persistLightSettings({ deskLampMode: nextMode })
+      setDeskLampMode(savedReading.deskLampMode)
     } catch {
       setModeSaveError(true)
     } finally {
       setIsSavingMode(false)
     }
+  }
+
+  const updateLightMode = (nextMode: (typeof LIGHT_MODES)[number]['id']) => {
+    setLightMode(nextMode)
+    const temperature = LIGHT_MODES.find((mode) => mode.id === nextMode)?.temperature
+    if (deskLampMode === 'manual' && temperature) {
+      void persistLightSettings({ colorTemperatureKelvin: Number.parseInt(temperature, 10) }).catch(() => setModeSaveError(true))
+    }
+  }
+
+  const updateBrightness = (nextBrightness: number) => {
+    setBrightness(nextBrightness)
+    if (deskLampMode !== 'manual') return
+    if (brightnessSaveTimer.current) clearTimeout(brightnessSaveTimer.current)
+    brightnessSaveTimer.current = setTimeout(() => {
+      void persistLightSettings({ deskLampBrightnessPercent: nextBrightness }).catch(() => setModeSaveError(true))
+    }, 250)
   }
 
   return (
@@ -148,39 +186,41 @@ export function MobilePillNavigation() {
             </div>
             {modeSaveError && <p className="desk-lamp-mode-error" role="status">模式同步失败</p>}
 
-            <div className="light-mode-picker" role="tablist" aria-label="灯光模式">
-              {LIGHT_MODES.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={lightMode === id ? 'light-mode-active' : ''}
-                  onClick={() => setLightMode(id)}
-                  role="tab"
-                  aria-selected={lightMode === id}
-                >
-                  <Icon size={18} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
+            <fieldset className={`light-control-manual-settings ${deskLampMode === 'auto' ? 'is-locked' : ''}`} disabled={deskLampMode === 'auto'} aria-label="手动灯光参数">
+              <div className="light-mode-picker" role="tablist" aria-label="灯光模式">
+                {LIGHT_MODES.map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={lightMode === id ? 'light-mode-active' : ''}
+                    onClick={() => updateLightMode(id)}
+                    role="tab"
+                    aria-selected={lightMode === id}
+                  >
+                    <Icon size={18} />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
 
-            <div className="light-level-control">
-              <div><span>亮度</span><strong className="metric-font">{brightness}%</strong></div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={brightness}
-                onChange={(event) => setBrightness(Number(event.target.value))}
-                aria-label="灯光亮度"
-              />
-            </div>
+              <div className="light-level-control">
+                <div><span>亮度</span><strong className="metric-font">{brightness}%</strong></div>
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={brightness}
+                  onChange={(event) => updateBrightness(Number(event.target.value))}
+                  aria-label="灯光亮度"
+                />
+              </div>
 
-            <div className="light-readings">
-              <div><span>照度</span><strong className="metric-font">{Math.round(brightness * 9.4)} <small>lx</small></strong></div>
-              <div><span>色温</span><strong className="metric-font">{currentMode.temperature}</strong></div>
-              <SlidersHorizontal size={18} aria-hidden="true" />
-            </div>
+              <div className="light-readings">
+                <div><span>照度</span><strong className="metric-font">{displayedAmbientLight} <small>lx</small></strong></div>
+                <div><span>色温</span><strong className="metric-font">{displayedColorTemperature} K</strong></div>
+                <SlidersHorizontal size={18} aria-hidden="true" />
+              </div>
+            </fieldset>
           </section>
         </div>
       )}

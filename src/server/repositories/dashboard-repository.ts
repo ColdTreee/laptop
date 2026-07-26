@@ -76,8 +76,8 @@ interface PomodoroRow extends RowDataPacket {
 }
 
 interface EnvironmentReadingRow extends RowDataPacket {
-  ambient_light_lux: number
-  desk_lamp_brightness_percent: number
+  ambient_light_lux: number | null
+  desk_lamp_brightness_percent: number | null
   color_temperature_kelvin: number | null
   desk_lamp_mode: 'auto' | 'manual' | null
   posture_status: number | null
@@ -335,8 +335,8 @@ export async function getLatestEnvironmentReading(userId: number): Promise<Envir
     if (!row) return structuredClone(FALLBACK_ENVIRONMENT_READING)
 
     return {
-      ambientLightLux: row.ambient_light_lux,
-      deskLampBrightnessPercent: row.desk_lamp_brightness_percent,
+      ambientLightLux: row.ambient_light_lux ?? FALLBACK_ENVIRONMENT_READING.ambientLightLux,
+      deskLampBrightnessPercent: row.desk_lamp_brightness_percent ?? FALLBACK_ENVIRONMENT_READING.deskLampBrightnessPercent,
       colorTemperatureKelvin: row.color_temperature_kelvin ?? 4200,
       deskLampMode: row.desk_lamp_mode ?? 'auto',
       postureStatus: row.posture_status,
